@@ -1,0 +1,67 @@
+vvp:
+  blobStorage:
+    baseUri: gs://pwm-lowa/vvp
+
+  flinkVersionMetadata:
+  - flinkImageRegistry: hellof20
+    flinkImageRepository: flink
+    flinkVersion: 1.14.3
+    imageTag: 1.14.3-stream1-scala_2.12-java11-gcs
+    useForSqlDeployments: true
+    defaultFor:
+    - 1.14
+
+  globalDeploymentDefaults: |
+    spec:
+      template:
+        spec:
+          artifact:
+            kind: jar
+            flinkImageRegistry: hellof20
+            flinkImageRepository: flink
+            flinkImageTag: 1.14.3-stream1-scala_2.12-java11-gcs
+            flinkVersion: '1.14'
+          kubernetes:
+            pods:
+              volumeMounts:
+              - name: gcs-key
+                volume:
+                  name: gcs-key
+                  secret:
+                    secretName: gcs-key
+                volumeMount:
+                  mountPath: /flink/gcs-creds/
+                  name: gcs-key
+              envVars:
+                - name: GOOGLE_APPLICATION_CREDENTIALS
+                  value: /flink/gcs-creds/gcs-key.json
+
+  globalSessionClusterDefaults: |
+    spec:
+      kubernetes:
+        pods:
+          volumeMounts:
+            - name: gcs-key
+              volume:
+                name: gcs-key
+                secret:
+                  secretName: gcs-key
+              volumeMount:
+                mountPath: /flink/gcs-creds/
+                name: gcs-key
+          envVars:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /flink/gcs-creds/gcs-key.json
+
+volumes:
+- name: "gcs-key"
+  secret:
+    secretName: "gcs-key"
+
+volumeMounts:
+- name: "gcs-key"
+  mountPath: "/vvp/gcs-creds"
+
+env:
+  - name:  "GOOGLE_APPLICATION_CREDENTIALS"
+    value: "/vvp/gcs-creds/gcs-key.json"
